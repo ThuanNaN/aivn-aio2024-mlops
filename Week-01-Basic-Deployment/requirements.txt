@@ -1,0 +1,5 @@
+pandas==2.2.2
+scikit-learn==1.5.2
+streamlit==1.39.0
+gradio==4.44.1
+easyocr==1.7.2
