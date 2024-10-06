@@ -1,0 +1,3 @@
+fastapi[standard]
+gradio==4.44.1
+easyocr==1.7.2
