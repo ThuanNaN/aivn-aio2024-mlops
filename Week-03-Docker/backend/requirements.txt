@@ -1,0 +1,2 @@
+fastapi[standard]
+easyocr==1.7.2
