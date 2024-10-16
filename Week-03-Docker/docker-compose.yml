@@ -1,0 +1,28 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: backend_cont
+    volumes:
+      - ./backend/app/logs/images:/app/logs/images
+    networks:
+      - aio_mlops_net
+    ports:
+      - 8000:8000
+    entrypoint: "uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend_cont
+    env_file:
+      - ./frontend/.env
+    networks:
+      - aio_mlops_net
+    ports:
+      - 3000:3000
+    entrypoint: "python app.py"
+
+networks:
+  aio_mlops_net:
+    driver: bridge
