@@ -17,7 +17,7 @@ def ocr_api(image_path: str):
     files = {'file_upload': (img_name, img_byte_arr, 'image/jpeg')}
     headers = {'accept': 'application/json'}
 
-    response = requests.post(url, headers=headers, files=files)
+    response = requests.post(url, headers=headers, files=files, timeout=10)
 
     if response.status_code == 200:
         json_results = response.json()['data']
