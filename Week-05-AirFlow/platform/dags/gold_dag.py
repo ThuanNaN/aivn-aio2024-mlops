@@ -126,7 +126,7 @@ def create_sequences(data: pd.DataFrame,
 
 def data_processing():
     config = load_config()
-    path_save = Path("./tmp_dir")  / config["version"]
+    path_save = Path("./gold_tmp_dir")  / config["version"]
 
     train_df = load_data(config["version"], "train", path_save)
     val_df = load_data(config["version"], "val", path_save)
@@ -173,7 +173,7 @@ def evaluate_model(loader, model, criterion, device):
 
 def train_model():
     config = load_config()
-    path_save = Path("./tmp_dir")  / config['version']
+    path_save = Path("./gold_tmp_dir")  / config['version']
 
     X_train = np.load(path_save/"X_train.npy")
     y_train = np.load(path_save/"y_train.npy")
@@ -217,7 +217,7 @@ def train_model():
 
 def validate_model():
     config = load_config()
-    path_save = Path("./tmp_dir")  / config['version']
+    path_save = Path("./gold_tmp_dir")  / config['version']
 
     test_df = load_data(config['version'], "test", path_save)
     test_df = clean_data(test_df)
@@ -249,8 +249,8 @@ def validate_model():
 
 def logging_artifacts():
     config = load_config()
-    path_save = Path("./tmp_dir")  / config["version"]
-    artifacts = ARITIFACTS / "btc_model" / config["version"]
+    path_save = Path("./gold_tmp_dir")  / config["version"]
+    artifacts = ARITIFACTS / "gold_model" / config["version"]
     artifacts.mkdir(parents=True, exist_ok=True)
 
     # Log the scalers
