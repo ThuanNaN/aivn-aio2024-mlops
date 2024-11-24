@@ -163,4 +163,4 @@ cython_debug/
 
 *.pth
 *.pkl
-
+DATA/artifacts/
