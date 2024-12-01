@@ -1,7 +1,8 @@
 version: v0.1
-hidden_size: 64
+hidden_size: 128
 num_layers: 2
 lr: 0.001
-batch_size: 64
-epochs: 10
+batch_size: 16
+epochs: 30
+lookback: 14
 device: cpu

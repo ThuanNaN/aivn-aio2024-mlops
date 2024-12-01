@@ -17,7 +17,7 @@ DATA_SOURCE = Path("./DATA")
 DATA_TRAINING = DATA_SOURCE / "training" / "btc_data"
 ARITIFACTS = DATA_SOURCE / "artifacts"
 
-features = ['Open', 'High', 'Low', 'Volume', 'Change']
+features = ['Open', 'High', 'Low', 'Volume']
 target = 'Price'
 
 default_args = {
@@ -59,24 +59,34 @@ class BTCData(Dataset):
         return self.X[idx], self.y[idx]
 
 
-class LSTMModel(nn.Module):
+class RNN_Model(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, num_layers):
-        super(LSTMModel, self).__init__()
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
-        self.fc = nn.Linear(hidden_size, output_size)
+        super().__init__()
+        self.rnn = nn.RNN(input_size, hidden_size, num_layers, batch_first=True, bidirectional=True)
+        self.fc1 = nn.Linear(hidden_size * 2, hidden_size)
+        self.fc2 = nn.Linear(hidden_size, output_size)
+        self.relu = nn.ReLU()
 
     def forward(self, x):
-        out, _ = self.lstm(x)
-        out = self.fc(out[:, -1, :])
-        return out
+        out, _ = self.rnn(x)
+        x = self.fc1(out[:, -1, :])
+        x = self.relu(x)
+        x = self.fc2(x)
+        return x
 
 
 def pull_data(version: str, part: str, path_save: str):
     print(f"Pulling data: version: {version}, part: {part}")
+
+    source_path = DATA_TRAINING / version / f"{part}.csv"
+    if not source_path.exists():
+        raise FileNotFoundError(f"Data source not found: {source_path}")
+
     cmd = f"cp {DATA_TRAINING}/{version}/{part}.csv {path_save}/{part}.csv"
     os.system(cmd)
     if not os.path.exists(f"{path_save}/{part}.csv"):
         raise FileNotFoundError(f"Data pull {part} failed")
+    
     print(f"Data pull {part} successfully")
 
 
@@ -94,7 +104,7 @@ def save_model(model: nn.Module, path_save: str):
 
 
 def clean_data(df: pd.DataFrame):
-    df.rename(columns={'Change %': 'Change'}, inplace=True)
+    df = df.drop(columns=['Change %'])
     df.rename(columns={'Vol.': 'Volume'}, inplace=True)
 
     df.sort_values('Date', inplace=True)
@@ -109,24 +119,23 @@ def clean_data(df: pd.DataFrame):
     for col in columns_to_clean:
         df[col] = df[col].str.replace(',', '').astype(float)
 
-    df['Change'] = df['Change'].str.replace('%', '').astype(float) / 100
+    df = df.drop(columns=['Date'])
     return df
 
+
 def create_sequences(data: pd.DataFrame, 
-                     features: list, 
-                     target: str, 
-                     lookback: int=7
+                     lookback: int=14
                      )-> tuple:
     X, y = [], []
     for i in range(lookback, len(data)):
-        X.append(data[features].iloc[i-lookback:i].values)
-        y.append(data[target].iloc[i])
+        X.append(data.iloc[i-lookback:i].values)
+        y.append(data[target][i])
     return np.array(X), np.array(y)
 
 
 def data_processing():
     config = load_config()
-    path_save = Path("./tmp_dir")  / config["version"]
+    path_save = Path("./btc_tmp_dir")  / config["version"]
 
     train_df = load_data(config["version"], "train", path_save)
     val_df = load_data(config["version"], "val", path_save)
@@ -147,8 +156,8 @@ def data_processing():
     val_df[features] = features_scaler.transform(val_df[features])
     val_df[target] = target_scaler.transform(val_df[[target]])
 
-    X_train, y_train = create_sequences(train_df, features, target)
-    X_val, y_val = create_sequences(val_df, features, target)
+    X_train, y_train = create_sequences(train_df, lookback=config['lookback'])
+    X_val, y_val = create_sequences(val_df, lookback=config['lookback'])
 
     # Save the processed data
     np.save(path_save/"X_train.npy", X_train)
@@ -166,7 +175,7 @@ def evaluate_model(loader, model, criterion, device):
         for i, (X_batch, y_batch) in enumerate(loader):
             X_batch, y_batch = X_batch.to(device), y_batch.to(device)
             y_pred = model(X_batch)
-            loss = criterion(y_pred.squeeze(), y_batch)
+            loss = criterion(y_pred.view(-1), y_batch)
             running_loss += loss.item()
     return running_loss / len(loader)
 
@@ -187,13 +196,14 @@ def train_model():
     val_loader = DataLoader(val_data, batch_size=config['batch_size'])
     
     device = config['device']
-    model = LSTMModel(input_size=5, 
+    input_size = len(features) + 1
+    model = RNN_Model(input_size=input_size, 
                       hidden_size=config['hidden_size'], 
                       output_size=1, 
                       num_layers=config['num_layers'])
     model.to(device)
     criterion = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=config['lr'])
+    optimizer = torch.optim.SGD(model.parameters(), lr=config['lr'])
 
     for epoch in range(config['epochs']):
         model.train()
@@ -202,14 +212,14 @@ def train_model():
             X_batch, y_batch = X_batch.to(device), y_batch.to(device)
             optimizer.zero_grad()
             y_pred = model(X_batch)
-            loss = criterion(y_pred.squeeze(), y_batch)
+            loss = criterion(y_pred.view(-1), y_batch)
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
-        print(f"Epoch {epoch}: Train Loss: {running_loss / len(train_loader)}")
-
+            
+        epoch_loss = running_loss / len(train_loader)
         val_loss = evaluate_model(val_loader, model, criterion, device)
-        print(f"Epoch {epoch}: Val Loss: {val_loss}")
+        print(f"Epoch {epoch + 1}, train loss: {epoch_loss:.6f}, val loss: {val_loss:.6f}")
     
     print("Training complete")
     save_model(model, path_save)
@@ -230,11 +240,12 @@ def validate_model():
     
     test_df[features] = features_scaler.transform(test_df[features])
     test_df[target] = target_scaler.transform(test_df[[target]])
-    X_test, y_test = create_sequences(test_df, features, target)
+    X_test, y_test = create_sequences(test_df)
 
     test_data = BTCData(X_test, y_test)    
     test_loader = DataLoader(test_data, batch_size=config['batch_size'])
-    model = LSTMModel(input_size=5, 
+    input_size = len(features) + 1
+    model = RNN_Model(input_size=input_size, 
                       hidden_size=config['hidden_size'], 
                       output_size=1, 
                       num_layers=config['num_layers'])
