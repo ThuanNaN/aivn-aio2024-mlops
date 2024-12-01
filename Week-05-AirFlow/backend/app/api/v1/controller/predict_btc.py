@@ -1,4 +1,3 @@
-import traceback
 import pandas as pd
 import torch
 from torch import nn
@@ -65,5 +64,6 @@ async def predict_futures(btc_models, input_data: pd.DataFrame, next_days=1) -> 
         unscaled_predictions = btc_models["target_scaler"].inverse_transform(np.array(predictions).reshape(-1, 1))
         return unscaled_predictions.reshape(-1).tolist()
         
-    except:
+    except Exception as e:
+        print(str(e))
         return Exception("An error occurred while predicting the future price of Bitcoin.")
