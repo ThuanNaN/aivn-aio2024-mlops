@@ -1,4 +1,4 @@
 fastapi[standard]==0.115.5
-pandas==2.4.1
+pandas==2.2.3
 torch==2.2.2
 numpy==2.1.1
