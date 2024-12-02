@@ -20,16 +20,16 @@ def plot_csv(file,
 
         if show_v1_pred:
             input_df = input_df.iloc[input_date_from:input_date_to]
-            v1_predictions = predict_btc_df(df, next_days, "v1")["predictions"]
+            v1_predictions = predict_btc_df(input_df, next_days, "v1")
         
         if show_v2_pred:
             input_df = input_df.iloc[input_date_from:input_date_to]
-            v2_predictions = predict_btc_df(df, next_days, "v2")["predictions"]
-            v2_predictions = [pred+100 for pred in v2_predictions]
+            v2_predictions = predict_btc_df(input_df, next_days, "v2")
 
         visualize_df = visualize_df.iloc[0:visualize_date]
         df_cleaned = clean_data(visualize_df)
-
+        
+        error = ""
         fig = go.Figure()
         fig.add_trace(go.Scatter(
             x=df_cleaned['Date'],
@@ -38,16 +38,22 @@ def plot_csv(file,
             name='BTC Price'
         ))
         if show_v1_pred:
+            if v1_predictions.get("error"):
+                error += v1_predictions["error"] + "\n"
+                v1_predictions = {"predictions": []}
             fig.add_trace(go.Scatter(
                 x=df_cleaned['Date'][input_date_to:input_date_to+next_days],
-                y=v1_predictions,
+                y=v1_predictions["predictions"],
                 mode='lines+markers',
                 name='V1 Predictions'
             ))
         if show_v2_pred:
+            if v2_predictions.get("error"):
+                error += v2_predictions["error"] + "\n"
+                v2_predictions = {"predictions": []}
             fig.add_trace(go.Scatter(
                 x=df_cleaned['Date'][input_date_to:input_date_to+next_days],
-                y=v2_predictions,
+                y=v2_predictions["predictions"],
                 mode='lines+markers',
                 name='V2 Predictions'
             ))
@@ -65,6 +71,8 @@ def plot_csv(file,
                 x=0.01
             )
         )
+        if error != "":
+            return fig, error
         return fig, "Plot created successfully!"
     
     except Exception as e:
