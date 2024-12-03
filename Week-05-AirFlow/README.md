@@ -10,21 +10,7 @@
 
 ### 2.1 Platform
 
-### 2.1.1 Airflow
-
-```bash
-cd ./platform/airflow
-
-docker compose up -d --build
-```
-
-### 2.1.2 DAGs
-
-```bash
-cd ./platform/dags
-
-chmod +x ./deploy.sh
-```
+See the [Platform README](./platform/README.md) for more information.
 
 ### 2.2 Backend
 

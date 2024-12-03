@@ -16,7 +16,15 @@ To start the airflow server, worker,... run the following commands:
 
 ```bash
 cd airflow
-docker-compose up -d --build
+
+# Initialize the folders
+mkdir -p ./dags ./logs ./plugins ./config
+
+# Set the UID of the user to the .env file
+echo -e "AIRFLOW_UID=$(id -u)" > .env
+
+# Start the services
+docker compose up -d --build
 ```
 
 Go to `http://localhost:8080` to access the airflow UI.
