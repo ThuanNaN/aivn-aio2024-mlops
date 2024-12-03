@@ -1,7 +1,0 @@
-version: v0.1
-hidden_size: 64
-num_layers: 3
-lr: 0.001
-batch_size: 64
-epochs: 10
-device: cpu
