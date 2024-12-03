@@ -15,7 +15,7 @@
 ```bash
 cd ./platform/airflow
 
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 ### 2.1.2 DAGs
