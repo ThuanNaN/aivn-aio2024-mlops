@@ -87,8 +87,8 @@ with gr.Blocks() as demo:
         with gr.Row():
             with gr.Column():
                 input_date_from = gr.Number(0, label="Input From Date")
-                input_date_to = gr.Number(7, label="Input To Date")
-                next_days = gr.Number(3, label="Next Days")
+                input_date_to = gr.Number(14, label="Input To Date")
+                next_days = gr.Number(7, label="Next Days")
             with gr.Column():
                 upload_button = gr.Button("Plot")
                 show_v1_pred = gr.Checkbox(label="Show V1 Model Predictions")
