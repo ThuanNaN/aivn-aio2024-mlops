@@ -27,3 +27,8 @@ cd ./frontend
 
 python app/main.py
 ```
+
+## TODO
+
+- [ ] Dockerize the backend
+- [ ] Dockerize the frontend
