@@ -25,6 +25,7 @@ def load_model(config: BTC_Config):
     return model
 
 def load_config(version: str):
+    print(f"Loading model artifacts for version {version}")
     artifacts = {}
     try:
         config = BTC_Config(version=version)
@@ -71,6 +72,5 @@ async def predict_btc(input_data: BTCModel):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(predictions)
         )
-    
     return {"predictions": predictions}
 
