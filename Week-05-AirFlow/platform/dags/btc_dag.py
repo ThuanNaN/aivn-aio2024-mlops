@@ -41,6 +41,8 @@ def load_config():
 
 def create_temp_dir():
     config = load_config()
+    cuda_available = True if torch.cuda.is_available() else False
+    print(f"Using GPU: {cuda_available}")
     path_save = Path("./btc_tmp_dir") / config['version']
     path_save.mkdir(parents=True, exist_ok=True)
     if not path_save.exists():
@@ -169,6 +171,7 @@ def data_processing():
 
 
 def evaluate_model(loader, model, criterion, device):
+    model.to(device)
     model.eval()
     running_loss = 0
     with torch.no_grad():
