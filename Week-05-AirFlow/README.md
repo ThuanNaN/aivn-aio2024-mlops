@@ -6,7 +6,6 @@
 
 - Docker
 - Docker Compose
-- Python >= 3.9.11
 
 ### 2.1 Platform
 
@@ -17,7 +16,7 @@ See the [Platform README](./platform/README.md) for more information.
 ```bash
 cd ./backend
 
-fastapi dev --host 0.0.0.0 --port 8000 --reload
+docker compose up -d
 ```
 
 ### 2.3 Frontend
@@ -25,10 +24,6 @@ fastapi dev --host 0.0.0.0 --port 8000 --reload
 ```bash
 cd ./frontend
 
-python app/main.py
+docker compose up -d
+
 ```
-
-## TODO
-
-- [ ] Dockerize the backend
-- [ ] Dockerize the frontend
