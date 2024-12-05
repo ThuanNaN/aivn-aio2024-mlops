@@ -135,4 +135,4 @@ with gr.Blocks() as demo:
     with gr.Tab("Gold Price"):
         gr.Markdown("Coming soon...")
 
-demo.launch(server_name="0.0.0.0", server_port=3000, debug=True)
+demo.launch(server_name="0.0.0.0", server_port=3000)
