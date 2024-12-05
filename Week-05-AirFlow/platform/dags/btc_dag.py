@@ -30,6 +30,21 @@ default_args = {
     'retry_delay': timedelta(minutes=1),
 }
 
+def seed_everything(seed: int):
+    import random, os
+    import numpy as np
+    import torch
+
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+seed_everything(3)
+
 def load_config():
     config_path = "./config/btc_config.yaml"
     if not os.path.exists(config_path):
@@ -101,8 +116,8 @@ def save_scaler(scaler: MinMaxScaler, path_save: str, name: str):
     with open(f"{path_save}/{name}_scaler.pkl", 'wb') as f:
         pickle.dump(scaler, f)
 
-def save_model(model: nn.Module, path_save: str):
-    torch.save(model.state_dict(), path_save / "model.pth")
+def save_model(model_state_dict, path_save: str):
+    torch.save(model_state_dict, path_save / "model.pth")
 
 
 def clean_data(df: pd.DataFrame):
@@ -208,6 +223,8 @@ def train_model():
     criterion = nn.MSELoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=config['lr'])
 
+    best_model_state_dict = None
+    best_loss = np.inf
     for epoch in range(config['epochs']):
         model.train()
         running_loss = 0
@@ -222,10 +239,15 @@ def train_model():
             
         epoch_loss = running_loss / len(train_loader)
         val_loss = evaluate_model(val_loader, model, criterion, device)
+
+        if val_loss < best_loss:
+            best_loss = val_loss
+            best_model_state_dict = model.state_dict()
+
         print(f"Epoch {epoch + 1}, train loss: {epoch_loss:.6f}, val loss: {val_loss:.6f}")
     
     print("Training complete")
-    save_model(model, path_save)
+    save_model(best_model_state_dict, path_save)
     
 
 def validate_model():
