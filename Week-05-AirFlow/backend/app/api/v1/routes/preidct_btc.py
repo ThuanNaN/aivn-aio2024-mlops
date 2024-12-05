@@ -20,7 +20,7 @@ def load_model(config: BTC_Config):
         output_size=config.output_size,
         num_layers=config.num_layers
     )
-    model_state_dict = torch.load(config.model_path, weights_only=True)
+    model_state_dict = torch.load(config.model_path, weights_only=True, map_location='cpu')
     model.load_state_dict(model_state_dict)
     return model
 
@@ -33,8 +33,9 @@ def load_config(version: str):
         artifacts["features_scaler"] = load_scaler(config.features_scaler_path)
         artifacts["target_scaler"] = load_scaler(config.target_scaler_path)
         artifacts["model"] = load_model(config)
-    except:
+    except Exception as e:
         print(f"Error loading model artifacts for version {version}")
+        print(e)
     return artifacts
 
 model_artifacts = {}
