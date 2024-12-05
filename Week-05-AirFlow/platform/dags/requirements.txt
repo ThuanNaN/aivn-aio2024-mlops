@@ -1,4 +1,4 @@
 torch==2.2.2
 pandas==2.2.3
-numpy==2.1.1
+numpy==1.26.1
 scikit-learn==1.5.2
