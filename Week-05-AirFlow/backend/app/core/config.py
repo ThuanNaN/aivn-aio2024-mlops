@@ -14,9 +14,9 @@ class BTC_Config:
     num_layers: int = 2
 
     def __post_init__(self):
-        self.features_scaler_path = f"../DATA/artifacts/btc_model/{self.version}/features_scaler.pkl"
-        self.target_scaler_path = f"../DATA/artifacts/btc_model/{self.version}/target_scaler.pkl"
-        self.model_path = f"../DATA/artifacts/btc_model/{self.version}/model.pth"
+        self.features_scaler_path = f"/DATA/artifacts/btc_model/{self.version}/features_scaler.pkl"
+        self.target_scaler_path = f"/DATA/artifacts/btc_model/{self.version}/target_scaler.pkl"
+        self.model_path = f"/DATA/artifacts/btc_model/{self.version}/model.pth"
 
 
 @dataclass
