@@ -1,6 +1,9 @@
 services:
     backend:
-        build: .
+        build: 
+            network: host
+            context: .
+            dockerfile: Dockerfile
         container_name: mlops-backend
         restart: on-failure
         healthcheck:

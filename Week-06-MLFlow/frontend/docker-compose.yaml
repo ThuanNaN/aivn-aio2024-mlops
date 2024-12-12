@@ -1,6 +1,9 @@
 services:
     frontend:
-        build: .
+        build: 
+            network: host
+            context: .
+            dockerfile: Dockerfile
         container_name: mlops-frontend
         restart: on-failure
         healthcheck:
