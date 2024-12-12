@@ -107,6 +107,22 @@ class RNN_Model(nn.Module):
         return x
 
 
+class LSTM_Model(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size, num_layers):
+        super().__init__()
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, bidirectional=True)
+        self.fc1 = nn.Linear(hidden_size * 2, hidden_size)
+        self.fc2 = nn.Linear(hidden_size, output_size)
+        self.relu = nn.ReLU()
+    
+    def forward(self, x):
+        out, _ = self.lstm(x)
+        x = self.fc1(out[:, -1, :])
+        x = self.relu(x)
+        x = self.fc2(x)
+        return x
+
+
 def pull_data(data_version: str, part: str, path_save: str):
     print(f"Pulling data version: {data_version}, part: {part}")
 
@@ -246,11 +262,22 @@ def train_model(**kwargs):
     test_loader = DataLoader(test_data, batch_size=train_config['batch_size'])
     
     device = train_config['device']
-    input_size = len(features) + 1
-    model = RNN_Model(input_size=input_size, 
-                      hidden_size=model_config['hidden_size'], 
-                      output_size=1, 
-                      num_layers=model_config['num_layers'])
+    input_size = model_config['input_size']
+    output_size = model_config['output_size']
+
+    if model_config['model_name'] == 'rnn':
+        model = RNN_Model(input_size=input_size, 
+                        hidden_size=model_config['hidden_size'], 
+                        output_size=output_size,
+                        num_layers=model_config['num_layers'])
+    elif model_config['model_name'] == 'lstm':
+        model = LSTM_Model(input_size=input_size, 
+                        hidden_size=model_config['hidden_size'], 
+                        output_size=output_size, 
+                        num_layers=model_config['num_layers'])
+    else:
+        raise ValueError(f"Model not supported: {model_config['model_name']}")
+
     model.to(device)
     criterion = nn.MSELoss()
 
@@ -279,6 +306,8 @@ def train_model(**kwargs):
             "lookback": data_config['lookback'],
 
             # model_config
+            "input_size": model_config['input_size'],
+            "output_size": model_config['output_size'],
             "hidden_size": model_config['hidden_size'],
             "num_layers": model_config['num_layers'],
 
@@ -314,7 +343,7 @@ def train_model(**kwargs):
             val_loss = evaluate_model(val_loader, model, criterion, device)
             mlflow.log_metric("val_mse_loss", f"{val_loss:.6f}", step=epoch)
 
-            if train_config["best_model_metric"] == "val_loss":
+            if train_config["best_model_metric"] == "val_mse_loss":
                 if val_loss < best_loss:
                     best_loss = val_loss
                     best_model_state_dict = model.state_dict()
@@ -333,7 +362,7 @@ def train_model(**kwargs):
         # Save the model and scalers to mlflow
         input_example = torch.rand(1, data_config['lookback'], input_size).numpy()
         mlflow.pytorch.log_model(model, 
-                                 artifact_path="model", 
+                                 artifact_path="pytorch-model", 
                                  pip_requirements="./requirements.txt", 
                                  input_example=input_example)
         mlflow.log_artifact(path_save / "features_scaler.pkl", artifact_path="scalers")
@@ -346,10 +375,55 @@ def train_model(**kwargs):
         print("Training complete")
 
 
+def registered_model(client, registered_name: str, model_alias: str, run_id: str):
+    try:
+        print(f"Registering model: {registered_name}")
+        client.create_registered_model(registered_name)
+        client.get_registered_model(model_alias)
+    except:
+        print(f"Model: {registered_name} already exists")
+
+    print(f"Creating model version: {model_alias}")
+    model_uri = f"runs:/{run_id}/pytorch-model"
+    mv = client.create_model_version(registered_name, model_uri, run_id)
+
+    print(f"Creating model alias: {model_alias}")
+    client.set_registered_model_alias(name=registered_name,
+                                        alias=model_alias,
+                                        version=mv.version)
+    print("--Model Version--")
+    print("Name: {}".format(mv.name))
+    print("Version: {}".format(mv.version))
+    print("Aliases: {}".format(mv.aliases))
+
+
 def validate_model(**kwargs):
-    mlflow_config = load_config("mlflow_config")
     run_id = kwargs['ti'].xcom_pull(task_ids='train_model', key='run_id')
     test_mse_loss = kwargs['ti'].xcom_pull(task_ids='train_model', key='test_mse_loss')
+
+    mlflow_config = load_config("mlflow_config")
+    connect_mlflow(mlflow_config)
+
+    client = MlflowClient()
+    registered_name = mlflow_config['registered_name']
+    model_alias = mlflow_config['model_alias']
+    try:
+        alias_mv = client.get_model_version_by_alias(registered_name, model_alias)
+        print(f"Alias: {model_alias} found")
+    except:
+        print(f"Alias: {model_alias} not found")
+        registered_model(client, registered_name, model_alias, run_id)
+
+    else:
+        print(f"Retrieving run: {alias_mv.run_id}")
+        prod_metric = mlflow.get_run(alias_mv.run_id).data.metrics
+        prod_test_mse_loss = prod_metric['test_mse_loss']
+
+        # Check best loss
+        if prod_test_mse_loss < test_mse_loss:
+            print(f"Current model is better: {prod_test_mse_loss}")
+        else:
+            registered_model(client, registered_name, model_alias, run_id)
 
 
 with DAG(
@@ -377,13 +451,14 @@ with DAG(
         dag=dag,
     )
 
-    # validate_model_task = PythonOperator(
-    #     task_id='validate_model',
-    #     python_callable=validate_model,
-    #     dag=dag,
-    # )
+    validate_model_task = PythonOperator(
+        task_id='validate_model',
+        python_callable=validate_model,
+        dag=dag,
+    )
 
     create_temp_dir_task >> \
     data_processing_task >> \
-    train_model_task
+    train_model_task >> \
+    validate_model_task
 

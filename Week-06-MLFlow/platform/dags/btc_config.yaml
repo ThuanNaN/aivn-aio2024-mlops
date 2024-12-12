@@ -3,12 +3,14 @@ data_config:
     lookback: 14
 
 model_config:
-    model_name: rnn_model
+    model_name: rnn
+    input_size: 5
+    output_size: 1
     hidden_size: 128
     num_layers: 2
 
 train_config:
-    run_name: rnn_v1
+    run_name: rnn_base
     seed: 3
     epochs: 10
     batch_size: 16
@@ -20,5 +22,8 @@ train_config:
     device: cpu
 
 mlflow_config:
-    tracking_uri: http://192.168.1.12:5000
-    experiment_name: btc_experiment_2
+    tracking_uri: http://localhost:5000
+    experiment_name: btc_experiment
+    registered_name: BTC_RNN_test
+    model_alias: production
+
