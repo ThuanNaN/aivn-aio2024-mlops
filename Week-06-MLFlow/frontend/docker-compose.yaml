@@ -1,0 +1,20 @@
+services:
+    frontend:
+        build: 
+            network: host
+            context: .
+            dockerfile: Dockerfile
+        container_name: mlops-frontend
+        restart: on-failure
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:3000/v1/health"] 
+            interval: 30s          
+            timeout: 10s           
+            retries: 3         
+            start_period: 10s 
+        env_file:
+            - .env
+        ports:
+            - 3000:3000
+        extra_hosts:
+            - "localhost:0.0.0.0"
