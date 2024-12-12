@@ -2,3 +2,4 @@ config/
 dags/
 logs/
 plugins/
+requirements.txt
