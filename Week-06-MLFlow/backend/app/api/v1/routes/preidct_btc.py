@@ -1,40 +1,72 @@
 import pandas as pd
 from io import StringIO
 import pickle
+import yaml
 import torch
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, APIRouter, HTTPException, status
 from app.core.config import BTC_Config
 from app.schema.btc import BTCModel
 from app.api.v1.controller.predict_btc import predict_futures, RNN_Model
+import mlflow
+from mlflow import MlflowClient
+
+
+LOCAL_ARTIFACTS = "/DATA/artifacts"
 
 def load_scaler(path: str):
-    with open(path, 'rb') as f:
+    with open(f"./scalers/{path}", 'rb') as f:
         scaler = pickle.load(f)
     return scaler
 
-def load_model(config: BTC_Config):
+
+def load_model(config: dict, data_version: str, run_id: str):
     model = RNN_Model(
-        input_size=config.input_size,
-        hidden_size=config.hidden_size,
-        output_size=config.output_size,
-        num_layers=config.num_layers
+        input_size=5,
+        hidden_size=config["hidden_size"],
+        output_size=1,
+        num_layers=config["num_layers"]
     )
-    model_state_dict = torch.load(config.model_path, weights_only=True, map_location='cpu')
+    model_path = f"{LOCAL_ARTIFACTS}/{data_version}/{run_id}/model.pth"
+    model_state_dict = torch.load(model_path, weights_only=True, map_location='cpu')
     model.load_state_dict(model_state_dict)
     return model
 
-def load_config(version: str):
-    print(f"Loading model artifacts for version {version}")
+
+def load_config(data_version: str):
+    print(f"Loading model and artifacts")
+    mlflow.set_tracking_uri("http://192.168.1.11:5000")
     artifacts = {}
     try:
-        config = BTC_Config(version=version)
+        deploy_config = BTC_Config()
+
+        client = MlflowClient()
+        alias_mv = client.get_model_version_by_alias(deploy_config.registered_name, 
+                                                     deploy_config.model_alias)
+        
+        print("Downloading model artifacts with run_id:", alias_mv.run_id)
+
+        scalers_artifact_uri = f"runs:/{alias_mv.run_id}/scalers"
+        mlflow.artifacts.download_artifacts(scalers_artifact_uri, dst_path=".")
+
+        config_artifact_uri = f"runs:/{alias_mv.run_id}/config"
+        mlflow.artifacts.download_artifacts(config_artifact_uri, dst_path=".")
+
+        with open("./config/btc_config.yaml", 'rb') as f:
+            config = yaml.safe_load(f)
+
         artifacts["config"] = config
-        artifacts["features_scaler"] = load_scaler(config.features_scaler_path)
-        artifacts["target_scaler"] = load_scaler(config.target_scaler_path)
-        artifacts["model"] = load_model(config)
+        artifacts["deploy_config"] = deploy_config
+        artifacts["features_scaler"] = load_scaler(deploy_config.features_scaler_path)
+        artifacts["target_scaler"] = load_scaler(deploy_config.target_scaler_path)
+
+        artifacts["model"] = load_model(config["model_config"], data_version, alias_mv.run_id)
+
+        # model_uri = f"models:/{deploy_config.registered_name}@production"
+        # artifacts["model"] = mlflow.pytorch.load_model(model_uri)
+
     except Exception as e:
-        print(f"Error loading model artifacts for version {version}")
+        print(f"Error loading model model artifacts")
         print(e)
     return artifacts
 
@@ -42,7 +74,7 @@ model_artifacts = {}
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     model_artifacts["v1"] = load_config("v0.1")
-    model_artifacts["v2"] = load_config("v0.2")
+    # model_artifacts["v2"] = load_config("v0.2")
     yield
     model_artifacts.clear()
 

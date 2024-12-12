@@ -41,8 +41,8 @@ def clean_data(df: pd.DataFrame):
 async def predict_futures(btc_models, input_data: pd.DataFrame, next_days=1) -> list:
     try:
         model = btc_models["model"].eval()
-        features = btc_models["config"].features
-        target = btc_models["config"].target
+        features = btc_models["deploy_config"].features
+        target = btc_models["deploy_config"].target
 
         input_data = clean_data(input_data)
         input_data.loc[:, features] = btc_models["features_scaler"].transform(input_data[features])
