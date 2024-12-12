@@ -14,6 +14,7 @@ from torch.utils.data import DataLoader, Dataset
 from pathlib import Path
 import mlflow
 from mlflow.tracking import MlflowClient
+from mlflow.models import infer_signature
 
 
 DATA_SOURCE = Path("./DATA")
@@ -354,17 +355,26 @@ def train_model(**kwargs):
         
         model.load_state_dict(best_model_state_dict)
 
+        # Save to cloud/local
+        torch.save(best_model_state_dict, path_save / "model.pth")
+        local_artifacts = DATA_SOURCE / "artifacts" / data_config['data_version'] / run.info.run_id
+        local_artifacts.mkdir(parents=True, exist_ok=True)
+        cp_cmd = f"cp {path_save}/model.pth {local_artifacts}/model.pth" 
+        os.system(cp_cmd)
+
         # Test the model
         test_loss = evaluate_model(test_loader, model, criterion, device)
         mlflow.log_metric("test_mse_loss", f"{test_loss:.6f}")
         print(f"Test Loss: {test_loss}")
 
         # Save the model and scalers to mlflow
-        input_example = torch.rand(1, data_config['lookback'], input_size).numpy()
+        input_example = torch.rand(1, data_config['lookback'], input_size)
+        signature = infer_signature(input_example.numpy(), model(input_example).detach().numpy())
         mlflow.pytorch.log_model(model, 
                                  artifact_path="pytorch-model", 
                                  pip_requirements="./requirements.txt", 
-                                 input_example=input_example)
+                                 signature=signature)
+
         mlflow.log_artifact(path_save / "features_scaler.pkl", artifact_path="scalers")
         mlflow.log_artifact(path_save / "target_scaler.pkl", artifact_path="scalers")
         mlflow.log_artifact("./config/btc_config.yaml", artifact_path="config")
