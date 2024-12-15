@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from io import StringIO
 import pickle
@@ -10,9 +11,11 @@ from app.schema.btc import BTCModel
 from app.api.v1.controller.predict_btc import predict_futures, RNN_Model
 import mlflow
 from mlflow import MlflowClient
-
+from dotenv import load_dotenv
+load_dotenv()
 
 LOCAL_ARTIFACTS = "/DATA/artifacts"
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
 
 def load_scaler(path: str):
     with open(f"./scalers/{path}", 'rb') as f:
@@ -60,10 +63,12 @@ def load_config(data_version: str):
         artifacts["features_scaler"] = load_scaler(deploy_config.features_scaler_path)
         artifacts["target_scaler"] = load_scaler(deploy_config.target_scaler_path)
 
+        model_uri = f"models:/{deploy_config.registered_name}@production"
+        # TODO: Load the model from the model_uri
+        # artifacts["model"] = mlflow.pyfunc.load_model(model_uri)
+
         artifacts["model"] = load_model(config["model_config"], data_version, alias_mv.run_id)
 
-        # model_uri = f"models:/{deploy_config.registered_name}@production"
-        # artifacts["model"] = mlflow.pytorch.load_model(model_uri)
 
     except Exception as e:
         print(f"Error loading model model artifacts")

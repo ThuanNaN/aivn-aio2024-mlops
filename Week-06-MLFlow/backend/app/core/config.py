@@ -6,7 +6,7 @@ class BTC_Config:
     target: str = 'Price'
     features_scaler_path: str = "features_scaler.pkl"
     target_scaler_path: str = "target_scaler.pkl"
-    registered_name: str = "BTC_RNN_test"
+    registered_name: str = "BTC_RNN"
     model_alias: str = "production"
 
 @dataclass

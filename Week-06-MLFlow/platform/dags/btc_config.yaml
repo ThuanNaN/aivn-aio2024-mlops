@@ -24,6 +24,6 @@ train_config:
 mlflow_config:
     tracking_uri: http://localhost:5000
     experiment_name: btc_experiment
-    registered_name: BTC_RNN_test
+    registered_name: BTC_RNN
     model_alias: production
 

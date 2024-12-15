@@ -53,3 +53,7 @@ In this week, we build a simple pipeline using Apache Airflow. We will create a 
 See the [Week 5: Airflow](Week-05-AirFlow/README.md) for more details.
 
 ## 6. MLflow
+
+In this week, we will use MLflow to track the model training and testing process. We will also use MLflow to version the models.
+
+See the [Week 6: MLflow](Week-06-MLflow/README.md) for more details.

@@ -32,3 +32,14 @@ Go to `http://localhost:8080` to access the airflow UI.
 - Username: `airflow`
 
 - Password: `airflow`
+
+## MLFlow
+
+To start the mlflow server, run the following commands:
+
+```bash
+cd mlflow
+
+# Start the services
+docker compose up -d --build
+```
