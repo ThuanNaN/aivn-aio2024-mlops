@@ -19,6 +19,7 @@ from mlflow.models import infer_signature
 
 DATA_SOURCE = Path("./DATA")
 DATA_TRAINING = DATA_SOURCE / "training" / "btc_data"
+ARTIFACTS_DIR = DATA_SOURCE / "artifacts"
 
 features = ['Open', 'High', 'Low', 'Volume']
 target = 'Price'
@@ -357,7 +358,7 @@ def train_model(**kwargs):
 
         # Save to cloud/local
         torch.save(best_model_state_dict, path_save / "model.pth")
-        local_artifacts = DATA_SOURCE / "artifacts" / data_config['data_version'] / run.info.run_id
+        local_artifacts = ARTIFACTS_DIR / "btc_exp" / data_config['data_version'] / run.info.run_id
         local_artifacts.mkdir(parents=True, exist_ok=True)
         cp_cmd = f"cp {path_save}/model.pth {local_artifacts}/model.pth" 
         os.system(cp_cmd)
