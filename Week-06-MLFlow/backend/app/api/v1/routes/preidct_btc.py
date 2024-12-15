@@ -30,7 +30,7 @@ def load_model(config: dict, data_version: str, run_id: str):
         output_size=1,
         num_layers=config["num_layers"]
     )
-    model_path = f"{LOCAL_ARTIFACTS}/{data_version}/{run_id}/model.pth"
+    model_path = f"{LOCAL_ARTIFACTS}/btc_exp/{data_version}/{run_id}/model.pth"
     model_state_dict = torch.load(model_path, weights_only=True, map_location='cpu')
     model.load_state_dict(model_state_dict)
     return model

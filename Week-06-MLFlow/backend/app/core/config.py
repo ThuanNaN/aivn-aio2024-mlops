@@ -8,9 +8,3 @@ class BTC_Config:
     target_scaler_path: str = "target_scaler.pkl"
     registered_name: str = "BTC_RNN"
     model_alias: str = "production"
-
-@dataclass
-class Gold_Config:
-    features: list = field(default_factory=lambda: ['Open', 'High', 'Low', 'Volume'])
-    target: str = 'Price'
-    
