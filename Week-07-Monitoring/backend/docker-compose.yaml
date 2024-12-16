@@ -7,7 +7,7 @@ services:
         container_name: mlops-backend
         restart: on-failure
         healthcheck:
-            test: ["CMD", "curl", "-f", "http://192.168.1.11:8000/v1/health"] 
+            test: ["CMD", "curl", "-f", "http://localhost:8000/v1/health"] 
             interval: 10s          
             timeout: 10s           
             retries: 3         
@@ -19,7 +19,7 @@ services:
         logging:
             driver: loki
             options:
-                loki-url: "http://192.168.1.11:3100/loki/api/v1/push"
+                loki-url: "http://localhost:3100/loki/api/v1/push"
         ports:
             - 8000:8000
         extra_hosts:
