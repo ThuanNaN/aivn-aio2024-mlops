@@ -26,7 +26,7 @@ The validation data spans in 1/2024.
 
 ### Test Data
 
-The test data spans from 2/2024.
+The test data spans in 2/2024.
 
 ## License
 

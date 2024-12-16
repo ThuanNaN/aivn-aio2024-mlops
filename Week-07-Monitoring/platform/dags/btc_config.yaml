@@ -1,0 +1,29 @@
+data_config:
+    data_version: v0.1
+    lookback: 14
+
+model_config:
+    model_name: rnn
+    input_size: 5
+    output_size: 1
+    hidden_size: 128
+    num_layers: 2
+
+train_config:
+    run_name: rnn_base
+    seed: 3
+    epochs: 10
+    batch_size: 16
+    optimizer: adam
+    lr: 0.001
+    weight_decay: 0.0001
+    best_model_metric: val_mse_loss
+    best_deploy_metric: test_mse_loss
+    device: cpu
+
+mlflow_config:
+    tracking_uri: http://192.168.1.11:5000
+    experiment_name: btc_experiment
+    registered_name: BTC_RNN
+    model_alias: production
+
