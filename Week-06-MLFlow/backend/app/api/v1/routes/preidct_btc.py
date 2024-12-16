@@ -38,7 +38,7 @@ def load_model(config: dict, data_version: str, run_id: str):
 
 def load_config(data_version: str):
     print(f"Loading model and artifacts")
-    mlflow.set_tracking_uri("http://192.168.1.11:5000")
+    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
     artifacts = {}
     try:
         deploy_config = BTC_Config()
