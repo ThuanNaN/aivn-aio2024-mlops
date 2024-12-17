@@ -7,18 +7,15 @@ from ultralytics import YOLO
 from fastapi.responses import JSONResponse
 from PIL import Image
 import numpy as np
+import torch
 from pathlib import Path
 from app.api.v1.controller.yolo import yolo_prediction
-from prometheus_client import Gauge, Histogram
-
-image_brightness_metric = Gauge("image_brightness", 
-                                "Brightness of processed images")
-
-brightness_histogram = Histogram(
-    'image_brightness_histogram',
-    'Histogram of image brightness',
-    buckets=[100, 200, 255] 
+from app.api.v1.routes.metrics import (
+    image_brightness_metric, 
+    brightness_histogram,
+    gpu_allocated_metric
 )
+
 
 LOCAL_ARTIFACTS = Path("/DATA/artifacts")
 LOCAL_CAPTURED = Path("/DATA/captured/yolo")
@@ -28,11 +25,15 @@ ANNOTATED_DIR = LOCAL_CAPTURED / "annotated"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(ANNOTATED_DIR, exist_ok=True)
 
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 def load_model(model_path: str) -> YOLO:
     """Load YOLO model from file path"""
     try:
         model = YOLO(model_path)
+        if torch.cuda.is_available():
+            model.to(DEVICE)
         return model
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error loading model: {str(e)}")
@@ -41,7 +42,7 @@ def load_model(model_path: str) -> YOLO:
 models = {}
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    model_path = LOCAL_ARTIFACTS / "yolo" / "best.pt"
+    model_path = LOCAL_ARTIFACTS / "yolo" / "yolo11x.pt"
     models["yolo"] = load_model(model_path)
     yield
     models.clear()
@@ -78,6 +79,9 @@ async def detect_objects(file: UploadFile = File(...)):
         image_array = np.asarray(grayscale_image)
         brightness = image_array.mean()
 
+        vram_memory_allocated = torch.cuda.memory_allocated(0) / 1e9
+
+        gpu_allocated_metric.set(vram_memory_allocated)
         image_brightness_metric.set(brightness)
         brightness_histogram.observe(brightness)
         
@@ -91,6 +95,7 @@ async def detect_objects(file: UploadFile = File(...)):
         return JSONResponse(content={
             'detections': detections,
             'total_objects': len(detections),
+            'device': str(DEVICE)
         })
     
     except Exception as e:
