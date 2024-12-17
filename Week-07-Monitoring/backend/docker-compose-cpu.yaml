@@ -24,10 +24,3 @@ services:
             - 8000:8000
         extra_hosts:
             - "localhost:0.0.0.0"
-        deploy:
-            resources:
-                reservations:
-                    devices:
-                        - driver: nvidia
-                          count: 1
-                          capabilities: [gpu]
