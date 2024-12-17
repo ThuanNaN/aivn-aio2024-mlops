@@ -4,10 +4,10 @@ global:
 scrape_configs:
     - job_name: "prometheus"
       static_configs:
-          - targets: ["localhost:9090"]
+          - targets: ["192.168.1.11:9090"]
     - job_name: "loki"
       static_configs:
-          - targets: ["localhost:3100"]
+          - targets: ["192.168.1.11:3100"]
     - job_name: "serving_server"
       static_configs:
-          - targets: ["localhost:8000"]
+          - targets: ["192.168.1.11:8000"]
