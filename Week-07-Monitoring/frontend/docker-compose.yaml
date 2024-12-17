@@ -6,12 +6,6 @@ services:
             dockerfile: Dockerfile
         container_name: mlops-frontend
         restart: on-failure
-        # healthcheck:
-        #     test: ["CMD", "curl", "-f", "http://localhost:7860"]
-        #     interval: 30s          
-        #     timeout: 10s           
-        #     retries: 3         
-        #     start_period: 10s 
         env_file:
             - .env
         ports:
