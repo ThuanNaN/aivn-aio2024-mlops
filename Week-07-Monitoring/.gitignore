@@ -164,3 +164,4 @@ cython_debug/
 *.pth
 *.pkl
 DATA/artifacts/
+DATA/captured/
