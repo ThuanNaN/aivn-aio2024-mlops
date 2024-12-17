@@ -21,7 +21,7 @@ start_services() {
     docker compose up -d --build
 
     # Start frontend
-    cd ../../frontend
+    cd ../frontend
     docker compose up -d --build
 
     echo "All services have been started."
