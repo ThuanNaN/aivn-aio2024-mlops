@@ -43,3 +43,20 @@ cd mlflow
 # Start the services
 docker compose up -d --build
 ```
+
+## Monitoring
+
+Install Docker Driver to collect the logs from the containers. [Details](https://grafana.com/docs/loki/latest/clients/docker-driver/)
+
+```bash
+docker plugin install grafana/loki-docker-driver:3.3.2-arm64 --alias loki --grant-all-permissions
+```
+
+Start the monitoring services:
+
+```bash
+cd monitoring
+
+# Start the services
+docker compose up -d --build
+```
