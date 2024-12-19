@@ -57,3 +57,9 @@ See the [Week 5: Airflow](Week-05-AirFlow/README.md) for more details.
 In this week, we will use MLflow to track the model training and testing process. We will also use MLflow to version the models.
 
 See the [Week 6: MLflow](Week-06-MLflow/README.md) for more details.
+
+## 7. Monitoring
+
+In this week, we will use Prometheus and Grafana to monitor the performance of our application.
+
+See the [Week 7: Monitoring](Week-07-Monitoring/README.md) for more details.
