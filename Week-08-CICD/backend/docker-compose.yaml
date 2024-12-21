@@ -1,0 +1,33 @@
+services:
+    backend:
+        build:
+            network: host
+            context: .
+            dockerfile: Dockerfile
+        container_name: mlops-backend
+        restart: on-failure
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://192.168.1.11:8000/v1/health"]
+            interval: 15s
+            timeout: 10s
+            retries: 3
+            start_period: 15s
+        volumes:
+            - ../DATA:/DATA
+        env_file:
+            - .env
+        logging:
+            driver: loki
+            options:
+                loki-url: "http://192.168.1.11:3100/loki/api/v1/push"
+        ports:
+            - 8000:8000
+        extra_hosts:
+            - "localhost:0.0.0.0"
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - driver: nvidia
+                          count: 1
+                          capabilities: [gpu]
