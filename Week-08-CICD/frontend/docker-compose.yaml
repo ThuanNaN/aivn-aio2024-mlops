@@ -1,0 +1,14 @@
+services:
+    frontend:
+        build: 
+            network: host
+            context: .
+            dockerfile: Dockerfile
+        container_name: mlops-frontend
+        restart: on-failure
+        env_file:
+            - .env
+        ports:
+            - 7860:7860
+        extra_hosts:
+            - "localhost:0.0.0.0"
