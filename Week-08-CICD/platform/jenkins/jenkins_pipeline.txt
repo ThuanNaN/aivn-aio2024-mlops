@@ -1,0 +1,42 @@
+pipeline {
+
+    agent {
+        docker {
+            image 'python:3.11.9'
+        }
+    }
+
+    environment {
+        DAG_PATH = "./dags_repo"
+        AIRFLOW_CONTAINER = "airflow-airflow-worker-1"
+    }
+
+    stages { 
+        stage('Pull from GitHub') {
+            steps {
+                git branch: 'main', url: 'https://github.com/ThuanNaN/mlops-dags-actions.git'
+            }
+        }
+        stage('Copy DAGs to Airflow') {
+            steps {
+                sh """
+                docker cp *.py $AIRFLOW_CONTAINER:/opt/airflow/dags/
+                """
+            }
+        }
+        stage('Copy Config to Airflow') {
+            steps {
+                sh """
+                docker cp *.yaml $AIRFLOW_CONTAINER:/opt/airflow/config/
+                """
+            }
+        }
+        stage('Trigger Airflow DAG') {
+            steps {
+                sh """
+                docker exec $AIRFLOW_CONTAINER airflow dags trigger --conf '{}' BTC_Price_Prediction
+                """
+            }
+        }
+    }
+}
