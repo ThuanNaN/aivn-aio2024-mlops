@@ -1,0 +1,33 @@
+services:
+    prometheus:
+        image: prom/prometheus
+        ports:
+            - "9090:9090"
+        volumes:
+            - ./prometheus:/etc/prometheus
+        command:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+        restart: always
+        logging:
+            driver: loki
+            options:
+                loki-url: "http://192.168.1.11:3100/loki/api/v1/push"
+
+    grafana:
+        image: grafana/grafana
+        ports:
+            - "3000:3000"
+        depends_on:
+            - prometheus
+        restart: always
+        logging:
+            driver: loki
+            options:
+                loki-url: "http://192.168.1.11:3100/loki/api/v1/push"
+
+    loki:
+        image: grafana/loki:latest
+        volumes:
+        - ./loki/config.yml:/etc/loki/local-config.yaml
+        ports:
+        - "3100:3100"
