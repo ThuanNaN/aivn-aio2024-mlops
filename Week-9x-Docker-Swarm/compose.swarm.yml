@@ -1,0 +1,45 @@
+services:
+  yolov8-api:
+    image: thuannan/demo-swarm-backend:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - yolov8-app-data:/app
+    environment:
+      - MODEL_PATH=yolov8n.pt
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy: 
+      mode: replicated
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+    networks:
+      - swarm-net
+
+  yolov8-frontend:
+    image: thuannan/demo-swarm-frontend:latest
+    ports:
+      - "7860:7860"
+    environment:
+      - BACKEND_URL=http://yolov8-api:8000
+    depends_on:
+      - yolov8-api
+    deploy: 
+      mode: replicated
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+    networks:
+      - swarm-net
+  
+volumes:
+  yolov8-app-data:
+
+networks: 
+  swarm-net:
+    driver: overlay

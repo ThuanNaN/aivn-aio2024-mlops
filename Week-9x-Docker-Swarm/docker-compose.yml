@@ -1,0 +1,30 @@
+services:
+  yolov8-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app:/app
+    environment:
+      - MODEL_PATH=yolov8n.pt
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  yolov8-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "7860:7860"
+    environment:
+      - BACKEND_URL=http://yolov8-api:8000
+    depends_on:
+      - yolov8-api
+    restart: unless-stopped
