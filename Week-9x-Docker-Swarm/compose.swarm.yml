@@ -18,6 +18,20 @@ services:
       replicas: 2
       restart_policy:
         condition: on-failure
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: '512M'
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      # placement: # persistent storage: docker node update --label-add persistence=true <NODE_ID>
+      #   constraints:
+      #     - node.labels.persistence == true
+      update_config: # Zero-Downtime Deployments
+        parallelism: 1
+        delay: 10s
+        order: start-first
     networks:
       - swarm-net
 
@@ -34,6 +48,17 @@ services:
       replicas: 2
       restart_policy:
         condition: on-failure
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: '512M'
+        reservations:
+          cpus: '0.25'
+          memory: 125M
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
     networks:
       - swarm-net
   
