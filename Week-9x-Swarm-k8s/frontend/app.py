@@ -2,7 +2,7 @@ import os
 import io
 import requests
 import gradio as gr
-from PIL import Image, ImageDraw
+from PIL import ImageDraw
 import json
 from dotenv import load_dotenv
 
@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Get backend URL from environment variable or use default
-BACKEND_URL = os.getenv("BACKEND_URL", "http://yolov8-api:8000")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://yolo-backend:8000")
 
 def process_image(image):
     """

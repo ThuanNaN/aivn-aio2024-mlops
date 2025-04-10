@@ -2,8 +2,8 @@
 
 ## 1. Rent, create VPN, and install Docker
 
-- Rent a VPS or EC2 instance (Ubuntu 24.04) for the manager node. Config security group (if using AWS EC2) to allow 2377
-- Rent a VPS or EC2 instance (Ubuntu 24.04) for the worker node
+- Rent a VPS or EC2 instance (Ubuntu 20.04) for the manager node. Config security group (if using AWS EC2) to allow 2377
+- Rent a VPS or EC2 instance (Ubuntu 20.04) for the worker node
 - Install Docker on both nodes
 
 ## 2. Build and push Docker image
@@ -21,7 +21,7 @@ cd backend
 docker buildx build --platform linux/amd64,linux/arm64 -t <your_dockerhub_username>/demo-swarm-backend:latest --push .
 
 # e.g.
-# docker buildx build --platform linux/amd64,linux/arm64 -t thuannan/demo-swarm-backend:latest .
+# docker buildx build --platform linux/amd64,linux/arm64 -t thuannan/demo-swarm-backend:v2.0.0 --push .
 ```
 
 Build and push the frontend image

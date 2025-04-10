@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: yolo-config
+data:
+  model_name: "yolov8n"
+  model_path: "yolov8n.pt"

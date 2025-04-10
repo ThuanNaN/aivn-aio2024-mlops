@@ -9,16 +9,20 @@ from pydantic import BaseModel
 import uvicorn
 from ultralytics import YOLO
 import cv2
+import requests
+
+VERSION = "1.0.1"
+MODEL_VERSION = os.getenv("MODEL_VERSION", "yolov8n")
 
 # Initialize FastAPI app
 app = FastAPI(
     title="YOLOv8 Object Detection API",
     description="API for detecting objects in images using YOLOv8",
-    version="1.0.0"
+    version=VERSION
 )
 
 # Load YOLOv8 model from environment variable or use default
-model_path = os.getenv("MODEL_PATH", "yolov8n.pt")
+model_path = os.getenv("MODEL_PATH", f"{MODEL_VERSION}.pt")
 model = YOLO(model_path)
 
 class DetectionResult(BaseModel):
@@ -38,10 +42,44 @@ class DetectionResponse(BaseModel):
 def read_root():
     return {"message": "Welcome to YOLOv8 Object Detection API"}
 
+@app.get("/version")
+def get_version():
+    return {
+        "version": VERSION,
+        "model_version": MODEL_VERSION
+    }
 
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
+
+@app.get("/detect/stress_test")
+async def test_endpoint():
+    url = 'http://images.cocodataset.org/val2017/000000039769.jpg'
+    image = Image.open(requests.get(url, stream=True).raw)
+    image_np = np.array(image)
+    results = model(image_np, conf=0.25, iou=0.45)[0]
+    detection_results = []
+    for box in results.boxes:
+        x1, y1, x2, y2 = box.xyxy[0].tolist()
+        class_id = int(box.cls[0].item())
+        confidence = float(box.conf[0].item())
+        class_name = results.names[class_id]
+        
+        detection_results.append(
+            DetectionResult(
+                class_id=class_id,
+                class_name=class_name,
+                confidence=confidence,
+                x_min=x1,
+                y_min=y1,
+                x_max=x2,
+                y_max=y2
+            )
+        )
+    response = {"results": detection_results}
+    return response
+
 
 @app.post("/detect/", response_model=DetectionResponse)
 async def detect_objects(

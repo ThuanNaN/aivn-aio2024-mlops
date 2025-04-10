@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yolo-backend
+  labels:
+    app: yolo-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yolo-backend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: yolo-backend
+    spec:
+      containers:
+      - name: yolo-backend
+        image: thuannan/demo-swarm-backend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        env:
+          - name: MODEL_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: yolo-config
+                key: model_name
+          - name: MODEL_PATH
+            valueFrom:
+              configMapKeyRef:
+                name: yolo-config
+                key: model_path
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8000
+          initialDelaySeconds: 20
+          timeoutSeconds: 10
+          periodSeconds: 10
+          failureThreshold: 6

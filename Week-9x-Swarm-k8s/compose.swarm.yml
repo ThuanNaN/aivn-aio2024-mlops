@@ -3,6 +3,8 @@ services:
     image: thuannan/demo-swarm-backend:latest
     ports:
       - "8000:8000"
+    volumes:
+      - yolov8-app-data:/app
     environment:
       - MODEL_PATH=yolov8n.pt
     healthcheck:
@@ -23,6 +25,9 @@ services:
         reservations:
           cpus: '0.25'
           memory: 256M
+      # placement: # persistent storage: docker node update --label-add persistence=true <NODE_ID>
+      #   constraints:
+      #     - node.labels.persistence == true
       update_config: # Zero-Downtime Deployments
         parallelism: 1
         delay: 10s
@@ -57,6 +62,9 @@ services:
     networks:
       - swarm-net
   
+volumes:
+  yolov8-app-data:
+
 networks: 
   swarm-net:
     driver: overlay
