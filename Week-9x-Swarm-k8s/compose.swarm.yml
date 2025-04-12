@@ -25,13 +25,21 @@ services:
         reservations:
           cpus: '0.25'
           memory: 256M
+          
       # placement: # persistent storage: docker node update --label-add persistence=true <NODE_ID>
       #   constraints:
       #     - node.labels.persistence == true
+      
       update_config: # Zero-Downtime Deployments
         parallelism: 1
         delay: 10s
         order: start-first
+        
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
     networks:
       - swarm-net
 
