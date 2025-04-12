@@ -10,18 +10,18 @@
     minikube start --nodes 4 --driver=docker
     ```
 
-    Start dashboard:
-
-    ```bash
-    minikube dashboard
-    ```
-
     Add metrics server:
 
     ```bash
     minikube addons enable metrics-server
     ```
 
+    Start dashboard:
+
+    ```bash
+    minikube dashboard
+    ```
+    
 2. **Apply Manifests**:
 
     ```bash
@@ -35,6 +35,7 @@
     kubectl get deployments
     kubectl get pods
     kubectl get services
+    kubectl get hpa yolo-backend-hpa -o wide
     ```
 
     Execute into the backend pod:
